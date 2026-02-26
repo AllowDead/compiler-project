@@ -1,0 +1,7 @@
+42
+3.14
+-10 // Lexer treats '-' and '10' separately unless logic is added for unary.
+    // Spec says Integer range, but doesn't explicitly demand unary support in Lexer.
+    // Keeping it simple: "10" is INT.
+100
+0.5

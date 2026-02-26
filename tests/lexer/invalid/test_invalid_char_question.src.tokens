@@ -1,0 +1,6 @@
+[Line 1, Column 5] Unexpected character: '?'
+1:1 IDENTIFIER "what"
+1:7 ASSIGN "="
+1:9 INT_LITERAL "5" 5
+1:10 SEMICOLON ";"
+1:11 END_OF_FILE ""

@@ -1,0 +1,6 @@
+fn test(x int, y float) bool {
+    if (x > 10) {
+        return true;
+    }
+    return false;
+}

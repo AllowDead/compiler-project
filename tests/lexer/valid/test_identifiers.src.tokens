@@ -1,0 +1,6 @@
+1:1 IDENTIFIER "myVar"
+2:1 IDENTIFIER "_underscore"
+3:1 IDENTIFIER "camelCase"
+4:1 IDENTIFIER "PascalCase"
+5:1 IDENTIFIER "var123"
+5:7 END_OF_FILE ""

@@ -1,0 +1,7 @@
+// This is a comment
+int x = 5; /* inline comment */
+/*
+    Multi-line
+    comment
+*/
+int y;

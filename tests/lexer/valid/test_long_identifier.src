@@ -1,0 +1,2 @@
+// Проверка длины (меньше 255)
+this_is_a_very_long_variable_name_but_still_valid_according_to_spec

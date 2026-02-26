@@ -1,0 +1,2 @@
+123. // Float must have digits after dot based on common implementation,
+      // though regex in LANG-1 says digit, "." , digit.

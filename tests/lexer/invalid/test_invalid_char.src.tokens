@@ -1,0 +1,5 @@
+[Line 1, Column 5] Unexpected character: '@'
+1:1 KW_INT "int"
+1:6 IDENTIFIER "x"
+1:7 SEMICOLON ";"
+1:8 END_OF_FILE ""

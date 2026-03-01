@@ -11,8 +11,8 @@ class TokenType(Enum):
     KW_FLOAT = auto()
     KW_BOOL = auto()
     KW_RETURN = auto()
-    KW_TRUE = auto()       # According to LANG-2 treated as keyword
-    KW_FALSE = auto()      # According to LANG-2 treated as keyword
+    KW_TRUE = auto()
+    KW_FALSE = auto()
     KW_VOID = auto()
     KW_STRUCT = auto()
     KW_FN = auto()

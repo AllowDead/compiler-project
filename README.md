@@ -1,6 +1,6 @@
 Запуск лексера
 
-python -m src.main lex examples/hello.src
+python -m src.main lex --input examples/hello.src
 
 Запуск тестов
 

@@ -1,0 +1,4 @@
+semantic error: argument type mismatch
+  --> line 4, col 16
+   |
+   = Argument 1 expects float, got string.

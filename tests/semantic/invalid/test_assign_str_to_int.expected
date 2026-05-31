@@ -1,0 +1,4 @@
+semantic error: type mismatch
+  --> line 2, col 13
+   |
+   = Cannot assign string to int.

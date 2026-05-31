@@ -55,8 +55,8 @@ class ASTPrinter(Visitor):
 
     def visit_var_decl(self, node: VarDeclNode):
         init = f" = {self._expr_str(node.initializer)}" if node.initializer else ""
-        # По спецификации VIS-1 тег строки в конце
-        self.result.append(f"{self.indent()}VarDecl: {node.var_type} {node.name}{init}; [line {node.line}]")
+        type_ann = f" [type: {node.inferred_type}]" if hasattr(node, 'inferred_type') else ""
+        self.result.append(f"{self.indent()}VarDecl: {node.var_type} {node.name}{init};{type_ann} [line {node.line}]")
 
     def visit_param(self, node: ParamNode):
         self.result.append(f"{self.indent()}Param: {node.param_type} {node.name} [line {node.line}]")
@@ -81,7 +81,8 @@ class ASTPrinter(Visitor):
         self.indent_level -= 1
 
     def visit_expr_stmt(self, node: ExprStmtNode):
-        self.result.append(f"{self.indent()}ExprStmt: {self._expr_str(node.expr)}; [line {node.line}]")
+        type_ann = f" [type: {node.expr.inferred_type}]" if hasattr(node.expr, 'inferred_type') and hasattr(node.expr, 'inferred_type') else ""
+        self.result.append(f"{self.indent()}ExprStmt: {self._expr_str(node.expr)};{type_ann} [line {node.line}]")
 
     def visit_if_stmt(self, node: IfStmtNode):
         # Считаем конечную строку (в Then или Else ветке)
@@ -137,8 +138,8 @@ class ASTPrinter(Visitor):
 
     def visit_return_stmt(self, node: ReturnStmtNode):
         val = self._expr_str(node.value) if node.value else ""
-        # По спецификации VIS-1 тег строки в конце
-        self.result.append(f"{self.indent()}Return: {val} [line {node.line}]")
+        type_ann = f" [type: {node.inferred_type}]" if hasattr(node, 'inferred_type') else ""
+        self.result.append(f"{self.indent()}Return: {val}{type_ann} [line {node.line}]")
 
     # --- Expressions (Возвращают строки, теги line не добавляем для читаемости) ---
 

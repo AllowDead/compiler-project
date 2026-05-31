@@ -1,0 +1,9 @@
+struct Point {
+    float x;
+    float y;
+}
+
+fn main() void {
+    Point p;
+    int z = p.z;
+}

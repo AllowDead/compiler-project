@@ -1,0 +1,4 @@
+semantic error: duplicate declaration
+  --> line 3, col 3
+   |
+   = Variable 'x' already declared in this scope.

@@ -1,0 +1,4 @@
+semantic error: type mismatch
+  --> line 2, col 14
+   |
+   = Cannot apply '+' to bool and int.

@@ -2,8 +2,8 @@ from pathlib import Path
 from tree_format import format_tree
 
 # Настройки фильтрации
-IGNORE_DIRS = {'.venv', '__pycache__', '.git', '.idea', 'node_modules', 'minicompiler.egg-info'}
-IGNORE_FILES = {'.pyc', '.tokens', '.expected', '.src', '__init__.py'}
+IGNORE_DIRS = {'.venv', '__pycache__', '.git', '.idea', 'node_modules', 'minicompiler.egg-info', 'v', '.pytest_cache'}
+IGNORE_FILES = {'.pyc', '.tokens', '.expected', '.src', '__init__.py', 'print_tree.py'}
 
 
 def has_valid_content(path: Path) -> bool:

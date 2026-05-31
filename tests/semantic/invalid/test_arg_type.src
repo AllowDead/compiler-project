@@ -1,0 +1,5 @@
+fn take_float(x float) void { }
+
+fn main() void {
+    take_float("hello");
+}

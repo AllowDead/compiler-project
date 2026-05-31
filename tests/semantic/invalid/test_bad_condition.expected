@@ -1,0 +1,4 @@
+semantic error: type mismatch
+  --> line 2, col 9
+   |
+   = Condition must be a boolean, got int.

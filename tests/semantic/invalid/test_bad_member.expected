@@ -1,0 +1,8 @@
+semantic error: undeclared variable
+  --> line 8, col 15
+   |
+   = Variable 'z' not found.
+semantic error: invalid member
+  --> line 8, col 15
+   |
+   = Struct Point has no field 'z'.

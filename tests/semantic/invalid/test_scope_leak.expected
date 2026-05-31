@@ -1,0 +1,4 @@
+semantic error: undeclared variable
+  --> line 5, col 13
+   |
+   = Variable 'x' not found.

@@ -19,6 +19,11 @@
 │   │   ├── ast_nodes.py
 │   │   ├── parser.py
 │   │   └── printer.py
+│   ├── semantic
+│   │   ├── analyzer.py
+│   │   ├── errors.py
+│   │   ├── symbol_table.py
+│   │   └── type_system.py
 │   └── utils
 │       ├── __init__.py
 │       └── error.py
@@ -28,8 +33,12 @@
     ├── parser
     │   ├── invalid
     │   └── valid
+    ├── semantic
+    │   └── unit
+    │       └── test_semantic_units.py
     └── test_runner
         ├── run_parser_tests.py
+        ├── run_semantic_tests.py
         └── run_tests.py
 
 Запуск лексера
@@ -58,8 +67,16 @@ python -m src.main parse --input examples/factorial.src --ast-format json --outp
 python -m src.main parse --input examples/factorial.src --ast-format dot --output ast.dot
 dot -Tpng ast.dot -o ast.png # Требуется установленный Graphviz
 
+Запуск семантического анализа
+
+python -m src.semantic.analyzer --input examples/hello.src
+
 Тестирование
 
 python tests/test_runner/run_lexer_tests.py
 
 python tests/test_runner/run_parser_tests.py
+
+python -m pytest tests/semantic/unit/
+
+python tests/test_runner/run_semantic_tests.py

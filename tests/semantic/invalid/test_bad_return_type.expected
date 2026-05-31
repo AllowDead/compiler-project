@@ -1,0 +1,4 @@
+semantic error: invalid return type
+  --> line 2, col 5
+   |
+   = Function expects int, but returning string.

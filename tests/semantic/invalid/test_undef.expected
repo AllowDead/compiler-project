@@ -1,0 +1,4 @@
+semantic error: undeclared function
+  --> line 2, col 5
+   |
+   = Function 'print' not found.

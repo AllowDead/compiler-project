@@ -1,0 +1,4 @@
+semantic error: argument count mismatch
+  --> line 6, col 5
+   |
+   = Function 'add' expects 2 arguments, got 1.

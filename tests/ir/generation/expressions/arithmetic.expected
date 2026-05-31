@@ -1,0 +1,13 @@
+# Generated MiniCompiler IR
+
+function main: void ()
+  # Basic block: entry
+  entry:
+    x_0 = ALLOCA 4    ; type=int    # allocate x: int
+    t1 = MUL 3, 4    ; type=int    # * expression
+    t2 = ADD 2, t1    ; type=int    # + expression
+    STORE [x_0], t2    # x = initializer
+    RETURN    # implicit void return
+
+  # Symbol table mapping:
+  # x_0 -> local variable x at offset 0, type int

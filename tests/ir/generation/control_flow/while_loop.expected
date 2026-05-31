@@ -1,0 +1,30 @@
+# Generated MiniCompiler IR
+
+function main: void ()
+  # Basic block: entry
+  entry:
+    i_0 = ALLOCA 4    ; type=int    # allocate i: int
+    STORE [i_0], 0    # i = initializer
+    JUMP L_loop_header1
+
+  # Basic block: loop_header
+  L_loop_header1:
+    t1 = LOAD [i_0]    ; type=int    # load i
+    t2 = CMP_LT t1, 10    ; type=bool    # < expression
+    JUMP_IF t2, L_loop_body2    # while condition true
+    JUMP L_loop_exit3    # while condition false
+
+  # Basic block: loop_body
+  L_loop_body2:
+    t3 = LOAD [i_0]    ; type=int    # load i
+    t4 = ADD t3, 1    ; type=int    # + expression
+    STORE [i_0], t4    # assign i
+    JUMP L_loop_header1
+
+  # Basic block: loop_exit
+  L_loop_exit3:
+    t5 = PHI i@entry, i@L_loop_body2    ; type=int    # merge loop-carried value of i
+    RETURN    # implicit void return
+
+  # Symbol table mapping:
+  # i_0 -> local variable i at offset 0, type int

@@ -1,0 +1,5 @@
+blocks=4
+instructions=13
+temporaries=5
+labels=entry,L_loop_header1,L_loop_body2,L_loop_exit3
+terminal_ops=JUMP,JUMP,JUMP,RETURN

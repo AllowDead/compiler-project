@@ -1,0 +1,6 @@
+blocks=1
+instructions=10
+temporaries=3
+typed_temporaries=t1:int,t2:int,t3:bool
+required_ops=ALLOCA,STORE,LOAD,CMP_LT,RETURN
+data_flow=a_0:STORE->LOAD,b_1:STORE->LOAD,c_2:STORE

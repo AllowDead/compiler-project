@@ -1,0 +1,29 @@
+# Generated MiniCompiler IR
+
+function main: void ()
+  # Basic block: entry
+  entry:
+    x_0 = ALLOCA 4    ; type=int    # allocate x: int
+    STORE [x_0], 1    # x = initializer
+    t1 = LOAD [x_0]    ; type=int    # load x
+    t2 = CMP_GT t1, 0    ; type=bool    # > expression
+    JUMP_IF t2, L_then1    # if condition true
+    JUMP L_else2    # if condition false
+
+  # Basic block: then
+  L_then1:
+    STORE [x_0], 2    # assign x
+    JUMP L_endif3
+
+  # Basic block: else
+  L_else2:
+    STORE [x_0], 3    # assign x
+    JUMP L_endif3
+
+  # Basic block: join
+  L_endif3:
+    t3 = PHI x@L_then1, x@L_else2    ; type=int    # merge possible values of x
+    RETURN    # implicit void return
+
+  # Symbol table mapping:
+  # x_0 -> local variable x at offset 0, type int

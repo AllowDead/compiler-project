@@ -1,0 +1,26 @@
+# Generated MiniCompiler IR
+
+function inc: int (int x)
+  # Basic block: entry
+  entry:
+    x_0 = ALLOCA 4    ; type=int    # allocate x: int
+    STORE [x_0], x    # parameter x
+    t1 = LOAD [x_0]    ; type=int    # load x
+    t2 = ADD t1, 1    ; type=int    # + expression
+    RETURN t2    # return value
+
+  # Symbol table mapping:
+  # x_0 -> local variable x at offset 0, type int
+
+function main: int ()
+  # Basic block: entry
+  entry:
+    y_0 = ALLOCA 4    ; type=int    # allocate y: int
+    PARAM 0, 41    # argument 0
+    t1 = CALL inc, 1    ; type=int    # call inc
+    STORE [y_0], t1    # y = initializer
+    t2 = LOAD [y_0]    ; type=int    # load y
+    RETURN t2    # return value
+
+  # Symbol table mapping:
+  # y_0 -> local variable y at offset 0, type int

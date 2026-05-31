@@ -9,6 +9,12 @@
 ├── README.md
 ├── src
 │   ├── __init__.py
+│   ├── codegen
+│   │   ├── __init__.py
+│   │   ├── abi.py
+│   │   ├── register_allocator.py
+│   │   ├── stack_frame.py
+│   │   └── x86_generator.py
 │   ├── ir
 │   │   ├── __init__.py
 │   │   ├── basic_block.py
@@ -25,6 +31,8 @@
 │   │   ├── ast_nodes.py
 │   │   ├── parser.py
 │   │   └── printer.py
+│   ├── runtime
+│   │   └── runtime.asm
 │   ├── semantic
 │   │   ├── analyzer.py
 │   │   ├── errors.py
@@ -35,6 +43,13 @@
 │       └── error.py
 └── tests
     ├── __init__.py
+    ├── codegen
+    │   ├── __init__.py
+    │   ├── invalid
+    │   ├── test_assembly_generation.py
+    │   ├── test_execution_pipeline.py
+    │   ├── utils.py
+    │   └── valid
     ├── ir
     │   ├── __init__.py
     │   ├── generation
@@ -57,6 +72,7 @@
     │   └── unit
     │       └── test_semantic_units.py
     └── test_runner
+        ├── run_codegen_tests.py
         ├── run_ir_tests.py
         ├── run_parser_tests.py
         ├── run_semantic_tests.py
@@ -65,13 +81,6 @@
 Запуск лексера
 
 python -m src.main lex --input examples/hello.src
-
-Запуск тестов
-
-python -m pytest tests/
-
-python tests/test_runner/run_tests.py
-
 
 Запуск парсера
 
@@ -116,6 +125,23 @@ python -m src.main ir --input examples/program.src --format json --output progra
 python -m src.main ir --input examples/program.src --stats
 ```
 
+Генерация ассемблерного кода
+
+```bash
+python src/main.py compile --input examples/add.src --output add.asm --target x86_64
+```
+
+## Assemble and link on Linux/WSL
+
+```bash
+python src/main.py compile --input examples/add.src --output add.asm
+nasm -f elf64 -o add.o add.asm
+nasm -f elf64 -o runtime.o src/runtime/runtime.asm
+ld -o add_program runtime.o add.o
+./add_program
+echo $?
+```
+
 Тестирование
 
 python tests/test_runner/run_lexer_tests.py
@@ -125,3 +151,7 @@ python tests/test_runner/run_parser_tests.py
 python -m pytest tests/semantic/unit/
 
 python tests/test_runner/run_semantic_tests.py
+
+```bash
+python tests/test_runner/run_codegen_tests.py
+```

@@ -1,0 +1,4 @@
+fn main() int {
+    bool b = true;
+    return b + 1;
+}

@@ -1,0 +1,8 @@
+[Syntax Error] Line 2, Col 8: Expect '(' after 'if'.
+[Syntax Error] Line 5, Col 1: Unexpected '}' at top level.
+Program [line 1]:
+  FunctionDecl: main -> void [line 1]:
+    Parameters:
+    Body [line 1]:
+      Block [line 1-3]:
+        VarDecl: int x = 1; [line 3]

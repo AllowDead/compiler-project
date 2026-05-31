@@ -1,3 +1,8 @@
 fn main() {
     int counter = 42;
+    int counter = 44;
 }
+
+
+
+

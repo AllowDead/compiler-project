@@ -1,0 +1,25 @@
+Program [line 1]:
+  FunctionDecl: factorial -> int [line 2]:
+    Parameters:
+      Param: int n [line 2]
+    Body [line 2]:
+      Block [line 2-6]:
+        IfStmt [line 3]:
+          Condition: (n <= 1)
+          Then:
+          Block [line 3-4]:
+            Return: 1 [line 4]
+        Return: (n * factorial((n - 1))) [line 6]
+  FunctionDecl: factorial_iter -> int [line 10]:
+    Parameters:
+      Param: int n [line 10]
+    Body [line 10]:
+      Block [line 10-17]:
+        VarDecl: int result = 1; [line 11]
+        VarDecl: int i = 1; [line 12]
+        WhileStmt [line 13]:
+          Condition: (i <= n)
+          Block [line 13-15]:
+            ExprStmt: (result = (result * i)); [line 14]
+            ExprStmt: (i = (i + 1)); [line 15]
+        Return: result [line 17]

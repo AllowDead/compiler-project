@@ -1,0 +1,8 @@
+Program [line 1]:
+  FunctionDecl: check -> bool [line 1]:
+    Parameters:
+    Body [line 1]:
+      Block [line 1-4]:
+        VarDecl: int a = 5; [line 2]
+        VarDecl: int b = 5; [line 3]
+        Return: ((a == b) && (a != 10)) [line 4]

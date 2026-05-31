@@ -1,0 +1,7 @@
+fn check(x int) void {
+    if (x > 0) {
+        x = 1;
+    } else {
+        x = -1;
+    }
+}

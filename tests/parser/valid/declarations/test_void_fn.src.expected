@@ -1,0 +1,5 @@
+Program [line 1]:
+  FunctionDecl: say_hello -> void [line 1]:
+    Parameters:
+    Body [line 1]:
+      Block [line 1]:

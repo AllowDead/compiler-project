@@ -1,0 +1,11 @@
+Program [line 1]:
+  FunctionDecl: add -> int [line 1]:
+    Parameters:
+    Body [line 1]:
+      Block [line 1-2]:
+        Return: 0 [line 2]
+  FunctionDecl: main -> void [line 5]:
+    Parameters:
+    Body [line 5]:
+      Block [line 5-6]:
+        VarDecl: int sum = add(1, 2); [line 6]

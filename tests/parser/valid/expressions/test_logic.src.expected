@@ -1,0 +1,6 @@
+Program [line 1]:
+  FunctionDecl: test -> void [line 1]:
+    Parameters:
+    Body [line 1]:
+      Block [line 1-2]:
+        VarDecl: bool a = ((True && False) || (! True)); [line 2]

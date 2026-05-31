@@ -39,6 +39,13 @@ class TokenType(Enum):
     BANG = auto()
     ASSIGN = auto()
 
+    # Новые токены для Спринта 2 (Составное присваивание)
+    PLUS_EQ = auto()  # +=
+    MINUS_EQ = auto()  # -=
+    STAR_EQ = auto()  # *=
+    SLASH_EQ = auto()  # /=
+    PERCENT_EQ = auto()  # %=
+
     # Delimiters
     LPAREN = auto()
     RPAREN = auto()

@@ -1,5 +1,4 @@
 import re
-from .token import Token, TokenType
 from utils.error import LexerError
 from .token import Token, TokenType
 
@@ -7,45 +6,41 @@ class Lexer:
     def __init__(self, source: str):
         self.source = source
         self.tokens = []
-        self.start = 0  # Start index of the current lexeme
-        self.current = 0  # Current index in the source
+        self.start = 0
+        self.current = 0
         self.line = 1
-        self.column = 1  # Current column (1-indexed)
+        self.column = 1
         self.token_index = 0
+        self.start_line = 1
+        self.start_col = 1
+
+        # ИСПРАВЛЕНИЕ: Запоминаем КОНЕЦ последнего токена
+        self.last_token_end_line = 1
+        self.last_token_end_col = 1
 
     # --- Interface Methods (LEX-2) ---
 
     def next_token(self):
-        """
-        Возвращает следующий токен и продвигает состояние.
-        """
-        # Если буфер токенов пуст или мы дочитали до конца, сканируем следующий
         if self.token_index >= len(self.tokens):
             if self.is_at_end():
-                # Возвращаем EOF если еще не был добавлен
                 if not self.tokens or self.tokens[-1].type != TokenType.END_OF_FILE:
-                    self.tokens.append(Token(TokenType.END_OF_FILE, "", self.line, self.column))
+                    self.tokens.append(Token(TokenType.END_OF_FILE, "", self.last_token_end_line, self.last_token_end_col))
             else:
                 self.start = self.current
                 self.start_line = self.line
                 self.start_col = self.column
-                self.scan_token()  # Сканер добавляет токен в self.tokens
+                self.scan_token()
 
         token = self.tokens[self.token_index]
         self.token_index += 1
         return token
 
     def peek_token(self):
-        """
-        Возвращает следующий токен НЕ продвигая состояние (lookahead).
-        """
         if self.token_index >= len(self.tokens):
             if self.is_at_end():
-                # EOF
                 if not self.tokens or self.tokens[-1].type != TokenType.END_OF_FILE:
-                    self.tokens.append(Token(TokenType.END_OF_FILE, "", self.line, self.column))
+                    self.tokens.append(Token(TokenType.END_OF_FILE, "", self.last_token_end_line, self.last_token_end_col))
             else:
-                # Сохраняем состояние чтобы восстановить после сканирования одного токена
                 saved_start = self.start
                 saved_current = self.current
                 saved_line = self.line
@@ -56,7 +51,6 @@ class Lexer:
                 self.start_col = self.column
                 self.scan_token()
 
-                # Восстанавливаем состояние (так как peek не должен менять позицию сканера)
                 self.start = saved_start
                 self.current = saved_current
                 self.line = saved_line
@@ -71,17 +65,15 @@ class Lexer:
         return self.column
 
     def scan_tokens(self):
-        # Сбрасываем индекс, если вызываем scan_tokens повторно
         self.token_index = 0
-        self.tokens = []  # Очищаем перед полным сканом
-
+        self.tokens = []
         while not self.is_at_end():
             self.start = self.current
             self.start_line = self.line
             self.start_col = self.column
             self.scan_token()
 
-        self.tokens.append(Token(TokenType.END_OF_FILE, "", self.line, self.column))
+        self.tokens.append(Token(TokenType.END_OF_FILE, "", self.last_token_end_line, self.last_token_end_col))
         return self.tokens
 
     def is_at_end(self):
@@ -240,19 +232,55 @@ class Lexer:
         self.add_token(type)
 
     def operator_or_delimiter(self, char):
-        # Красивое сопоставление операторов
         match char:
-            # Арифметика
+            # Арифметика и присваивание
             case '+':
-                self.add_token(TokenType.PLUS)
-            case '-':
-                self.add_token(TokenType.MINUS)
-            case '*':
-                self.add_token(TokenType.STAR)
-            case '%':
-                self.add_token(TokenType.PERCENT)
+                if self.match('='):
+                    self.add_token(TokenType.PLUS_EQ)
+                else:
+                    self.add_token(TokenType.PLUS)
 
-            # Логика и присваивание
+            case '-':
+                if self.match('='):
+                    self.add_token(TokenType.MINUS_EQ)
+                else:
+                    self.add_token(TokenType.MINUS)
+
+            case '*':
+                if self.match('='):
+                    self.add_token(TokenType.STAR_EQ)
+                else:
+                    self.add_token(TokenType.STAR)
+
+            case '/':
+                # Сначала проверяем составное присваивание /=
+                if self.match('='):
+                    self.add_token(TokenType.SLASH_EQ)
+                elif self.match('/'):
+                    # Однострочный комментарий
+                    while (self.peek() != '\n' and not self.is_at_end()):
+                        self.advance()
+                elif self.match('*'):
+                    # Многострочный комментарий
+                    while (not (self.peek() == '*' and self.peek_next() == '/') and not self.is_at_end()):
+                        if self.peek() == '\n':
+                            self.line += 1
+                            self.column = 0
+                        self.advance()
+                    if self.is_at_end():
+                        raise LexerError("Unterminated multi-line comment", self.start_line, self.start_col)
+                    self.advance()  # *
+                    self.advance()  # /
+                else:
+                    self.add_token(TokenType.SLASH)
+
+            case '%':
+                if self.match('='):
+                    self.add_token(TokenType.PERCENT_EQ)
+                else:
+                    self.add_token(TokenType.PERCENT)
+
+            # Логика и сравнение
             case '!':
                 if self.match('='):
                     self.add_token(TokenType.BANG_EQ)
@@ -280,11 +308,7 @@ class Lexer:
             case '&':
                 if self.match('&'):
                     self.add_token(TokenType.AND)
-                # Лексер может выдать ошибку, если просто &, но в C это часто bitwise.
-                # В нашей спецификации (LANG-5) только &&. Если одиночный & не нужен, добавим else.
                 else:
-                    # Пропускаем или ругаемся, depending on spec. Для простоты пропустим или добавим токен.
-                    # Для соответствия STRICT spec (где только &&), это ошибка:
                     raise LexerError("Unexpected character '&', expected '&&'", self.line, self.column - 1)
 
             case '|':
@@ -320,3 +344,7 @@ class Lexer:
     def add_token(self, type, literal=None):
         lexeme = self.source[self.start:self.current]
         self.tokens.append(Token(type, lexeme, self.start_line, self.start_col, literal))
+
+        # ИСПРАВЛЕНИЕ: Вычисляем позицию строго СРАЗУ ПОСЛЕ последнего символа токена
+        self.last_token_end_line = self.start_line
+        self.last_token_end_col = self.start_col + len(lexeme)

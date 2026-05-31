@@ -1,0 +1,29 @@
+struct Point {
+    float x;
+    float y;
+}
+
+fn get_distance(p1 Point, p2 Point) float {
+    float dx = p1.x - p2.x;
+    float dy = p1.y - p2.y;
+
+    // Simple placeholder for sqrt logic
+    /*
+       Note: We don't have math functions yet,
+       but lexer should handle the float arithmetic.
+    */
+    float dist = (dx * dx) + (dy * dy);
+    return dist;
+}
+
+fn main() void {
+    Point origin;
+    origin.x = 0.0;
+    origin.y = 0.0;
+
+    Point p;
+    p.x = 3.5;
+    p.y = 4.0;
+
+    bool is_close = false;
+}

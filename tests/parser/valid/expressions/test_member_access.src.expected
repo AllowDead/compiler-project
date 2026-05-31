@@ -1,0 +1,8 @@
+Program [line 1]:
+  FunctionDecl: test -> void [line 1]:
+    Parameters:
+    Body [line 1]:
+      Block [line 1-4]:
+        VarDecl: Point p; [line 2]
+        VarDecl: int x = (p . x); [line 3]
+        VarDecl: int y = (p . y); [line 4]

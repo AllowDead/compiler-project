@@ -1,0 +1,7 @@
+fn add() int {
+    return 0;
+}
+
+fn main() void {
+    int sum = add(1, 2);
+}

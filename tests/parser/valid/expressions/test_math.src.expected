@@ -1,0 +1,8 @@
+Program [line 1]:
+  FunctionDecl: main -> void [line 1]:
+    Parameters:
+    Body [line 1]:
+      Block [line 1-4]:
+        VarDecl: int a = (1 + (2 * 3)); [line 2]
+        VarDecl: int b = ((1 + 2) * 3); [line 3]
+        VarDecl: int c = (- a); [line 4]

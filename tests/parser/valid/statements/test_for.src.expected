@@ -1,0 +1,11 @@
+Program [line 1]:
+  FunctionDecl: loop_test -> void [line 1]:
+    Parameters:
+    Body [line 1]:
+      Block [line 1-2]:
+        ForStmt [line 2]:
+          Init: Statement
+          Cond: (i < 3)
+          Update: (i = (i + 1))
+          Block [line 2-3]:
+            VarDecl: int x = i; [line 3]

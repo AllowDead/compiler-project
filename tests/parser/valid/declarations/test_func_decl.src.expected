@@ -1,0 +1,8 @@
+Program [line 1]:
+  FunctionDecl: add -> int [line 1]:
+    Parameters:
+      Param: int a [line 1]
+      Param: int b [line 1]
+    Body [line 1]:
+      Block [line 1-2]:
+        Return: (a + b) [line 2]

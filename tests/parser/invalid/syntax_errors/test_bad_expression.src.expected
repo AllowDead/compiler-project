@@ -1,0 +1,6 @@
+[Syntax Error] Line 2, Col 13: Expect expression.
+Program [line 1]:
+  FunctionDecl: test -> void [line 1]:
+    Parameters:
+    Body [line 1]:
+      Block [line 1]:

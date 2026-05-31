@@ -1,0 +1,14 @@
+Program [line 1]:
+  FunctionDecl: check -> void [line 1]:
+    Parameters:
+      Param: int x [line 1]
+    Body [line 1]:
+      Block [line 1-2]:
+        IfStmt [line 2-4]:
+          Condition: (x > 0)
+          Then:
+          Block [line 2-3]:
+            ExprStmt: (x = 1); [line 3]
+          Else:
+          Block [line 4-5]:
+            ExprStmt: (x = (- 1)); [line 5]

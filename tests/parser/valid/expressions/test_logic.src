@@ -1,0 +1,8 @@
+fn test() void {
+    bool a = true && false || !true;
+}
+
+
+
+
+

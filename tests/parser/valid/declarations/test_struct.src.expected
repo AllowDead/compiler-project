@@ -1,0 +1,6 @@
+Program [line 1]:
+  StructDecl: Vector3 [line 1]:
+    Fields:
+      VarDecl: float x; [line 2]
+      VarDecl: float y; [line 3]
+      VarDecl: float z; [line 4]

@@ -1,2 +1,2 @@
 [Line 1, Column 1] Unterminated string literal
-1:2 END_OF_FILE ""
+1:1 END_OF_FILE ""

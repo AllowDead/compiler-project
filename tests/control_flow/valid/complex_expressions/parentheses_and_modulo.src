@@ -1,0 +1,9 @@
+fn main() int {
+    int a = 2;
+    int b = 3;
+    int c = 10;
+    int d = 6;
+    int e = 17;
+    int f = 5;
+    return (a + b) * (c - d) / (e % f);
+}

@@ -12,6 +12,9 @@
 │   ├── codegen
 │   │   ├── __init__.py
 │   │   ├── abi.py
+│   │   ├── control_flow_generator.py
+│   │   ├── expression_generator.py
+│   │   ├── label_manager.py
 │   │   ├── register_allocator.py
 │   │   ├── stack_frame.py
 │   │   └── x86_generator.py
@@ -50,6 +53,10 @@
     │   ├── test_execution_pipeline.py
     │   ├── utils.py
     │   └── valid
+    ├── control_flow
+    │   ├── invalid
+    │   ├── test_control_flow_generation.py
+    │   └── valid
     ├── ir
     │   ├── __init__.py
     │   ├── generation
@@ -73,6 +80,7 @@
     │       └── test_semantic_units.py
     └── test_runner
         ├── run_codegen_tests.py
+        ├── run_control_flow_tests.py
         ├── run_ir_tests.py
         ├── run_parser_tests.py
         ├── run_semantic_tests.py
@@ -154,4 +162,19 @@ python tests/test_runner/run_semantic_tests.py
 
 ```bash
 python tests/test_runner/run_codegen_tests.py
+```
+
+python tests/test_runner/run_control_flow_tests.py
+
+Run assembly-shape tests:
+
+```bash
+pytest tests/control_flow/test_control_flow_generation.py -v
+```
+
+Run all control-flow tests:
+
+```bash
+pytest tests/control_flow -v
+python tests/test_runner/run_control_flow_tests.py
 ```

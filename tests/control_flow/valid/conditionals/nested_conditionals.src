@@ -1,0 +1,12 @@
+fn main() int {
+    int a = 4;
+    int b = 7;
+    if (a < b) {
+        if (b >= 7) {
+            return 7;
+        } else {
+            return 6;
+        }
+    }
+    return 0;
+}

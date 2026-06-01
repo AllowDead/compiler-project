@@ -556,19 +556,30 @@ class IRGenerator:
         if node.operator == ".":
             addr = self._address_of(node)
             temp = self._new_temp(self._type_name(node))
-            self._emit(IROp.LOAD, dest=temp, args=[addr], comment="field access", type_name=temp.type_name, source_line=node.line)
+            self._emit(
+                IROp.LOAD,
+                dest=temp,
+                args=[addr],
+                comment="field access",
+                type_name=temp.type_name,
+                source_line=node.line,
+            )
             return temp
+
+        # Sprint 6: real short-circuit evaluation.
+        # Important: do NOT evaluate node.right before deciding from node.left.
+        if node.operator in ("&&", "||"):
+            return self._emit_short_circuit_logical(node)
 
         left = node.left.accept(self)
         right = node.right.accept(self)
+
         op_map = {
             "+": IROp.ADD,
             "-": IROp.SUB,
             "*": IROp.MUL,
             "/": IROp.DIV,
             "%": IROp.MOD,
-            "&&": IROp.AND,
-            "||": IROp.OR,
             "==": IROp.CMP_EQ,
             "!=": IROp.CMP_NE,
             "<": IROp.CMP_LT,
@@ -576,11 +587,138 @@ class IRGenerator:
             ">": IROp.CMP_GT,
             ">=": IROp.CMP_GE,
         }
+
         opcode = op_map[node.operator]
         result_type = self._type_name(node)
         dest = self._new_temp(result_type)
-        self._emit(opcode, dest=dest, args=[left, right], comment=f"{node.operator} expression", type_name=result_type, source_line=node.line)
+
+        self._emit(
+            opcode,
+            dest=dest,
+            args=[left, right],
+            comment=f"{node.operator} expression",
+            type_name=result_type,
+            source_line=node.line,
+        )
+
         return dest
+
+    def _emit_short_circuit_logical(self, node: BinaryExprNode) -> IROperand:
+        result = self._new_temp("bool")
+
+        rhs_label = self._new_label("L_logic_rhs")
+        true_label = self._new_label("L_logic_true")
+        false_label = self._new_label("L_logic_false")
+        end_label = self._new_label("L_logic_end")
+
+        left = node.left.accept(self)
+
+        if node.operator == "&&":
+            # false && anything -> false, right side is skipped
+            self._emit(
+                IROp.JUMP_IF,
+                args=[left, IROperand.label(rhs_label)],
+                comment="&& left true: evaluate right",
+                source_line=node.line,
+            )
+            self._emit(
+                IROp.JUMP,
+                args=[IROperand.label(false_label)],
+                comment="&& short-circuit false",
+                source_line=node.line,
+            )
+
+        elif node.operator == "||":
+            # true || anything -> true, right side is skipped
+            self._emit(
+                IROp.JUMP_IF,
+                args=[left, IROperand.label(true_label)],
+                comment="|| short-circuit true",
+                source_line=node.line,
+            )
+            self._emit(
+                IROp.JUMP,
+                args=[IROperand.label(rhs_label)],
+                comment="|| left false: evaluate right",
+                source_line=node.line,
+            )
+
+        self._start_block(rhs_label, "block")
+        right = node.right.accept(self)
+        self._emit(
+            IROp.JUMP_IF,
+            args=[right, IROperand.label(true_label)],
+            comment=f"{node.operator} right true",
+            source_line=node.line,
+        )
+        self._emit(
+            IROp.JUMP,
+            args=[IROperand.label(false_label)],
+            comment=f"{node.operator} right false",
+            source_line=node.line,
+        )
+
+        self._start_block(true_label, "block")
+        self._emit(
+            IROp.MOVE,
+            dest=result,
+            args=[IROperand.literal(True, "bool")],
+            comment=f"{node.operator} result true",
+            type_name="bool",
+            source_line=node.line,
+        )
+        self._jump_to(end_label)
+
+        self._start_block(false_label, "block")
+        self._emit(
+            IROp.MOVE,
+            dest=result,
+            args=[IROperand.literal(False, "bool")],
+            comment=f"{node.operator} result false",
+            type_name="bool",
+            source_line=node.line,
+        )
+        self._jump_to(end_label)
+
+        self._start_block(end_label, "join")
+        return result
+
+    def _emit_short_circuit_expr(self, node: BinaryExprNode) -> IROperand:
+        """Lower && and || with real short-circuit control flow.
+
+        The right operand is emitted only in the RHS basic block, so dangerous
+        expressions such as `a != 0 && b / a > 2` do not evaluate `b / a`
+        when the left operand already determines the result.
+        """
+        result = self._new_temp("bool")
+        rhs_label = self._new_label("L_logic_rhs")
+        true_label = self._new_label("L_logic_true")
+        false_label = self._new_label("L_logic_false")
+        end_label = self._new_label("L_logic_end")
+
+        left = node.left.accept(self)
+        if node.operator == "&&":
+            self._emit(IROp.JUMP_IF, args=[left, IROperand.label(rhs_label)], comment="&& left true: evaluate right", source_line=node.line)
+            self._emit(IROp.JUMP, args=[IROperand.label(false_label)], comment="&& short-circuit false", source_line=node.line)
+        else:
+            self._emit(IROp.JUMP_IF, args=[left, IROperand.label(true_label)], comment="|| short-circuit true", source_line=node.line)
+            self._emit(IROp.JUMP, args=[IROperand.label(rhs_label)], comment="|| left false: evaluate right", source_line=node.line)
+
+        self._start_block(rhs_label, "block")
+        right = node.right.accept(self)
+        self._emit(IROp.JUMP_IF, args=[right, IROperand.label(true_label)], comment=f"{node.operator} right true", source_line=node.line)
+        self._emit(IROp.JUMP, args=[IROperand.label(false_label)], comment=f"{node.operator} right false", source_line=node.line)
+
+        self._start_block(true_label, "block")
+        self._emit(IROp.MOVE, dest=result, args=[IROperand.literal(True, "bool")], comment=f"{node.operator} result true", type_name="bool", source_line=node.line)
+        self._jump_to(end_label)
+
+        self._start_block(false_label, "block")
+        self._emit(IROp.MOVE, dest=result, args=[IROperand.literal(False, "bool")], comment=f"{node.operator} result false", type_name="bool", source_line=node.line)
+        self._jump_to(end_label)
+
+        self._start_block(end_label, "join")
+        return result
 
     def visit_unary_expr(self, node: UnaryExprNode) -> IROperand:
         operand = node.right.accept(self)
@@ -605,8 +743,9 @@ class IRGenerator:
         result_type = self._type_name(node)
         dest = None if result_type == "void" else self._new_temp(result_type)
 
-        # Аргументы уже переданы отдельными PARAM-инструкциями.
-        # Поэтому CALL хранит только имя функции и количество аргументов.
+        # Важно для Sprint 4 golden tests:
+        # аргументы уже переданы отдельными PARAM-инструкциями,
+        # поэтому CALL хранит только имя функции и количество аргументов.
         args = [
             IROperand.function(func_name),
             IROperand.literal(len(arg_values), "int"),

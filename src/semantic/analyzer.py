@@ -176,6 +176,7 @@ class SemanticAnalyzer:
     # --- Expression Visitors (Возвращают Type) ---
 
     def visit_literal_expr(self, node: LiteralExprNode) -> Type:
+        # bool must be checked before int because Python bool is a subclass of int.
         if isinstance(node.value, bool):
             node.inferred_type = BOOL_TYPE
         elif isinstance(node.value, int):

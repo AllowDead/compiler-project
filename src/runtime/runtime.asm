@@ -2,6 +2,10 @@
 ; NASM syntax, Linux x86-64 syscalls, System V AMD64 ABI
 
 default rel
+section .data
+    division_by_zero_msg db "runtime error: division by zero", 10
+    division_by_zero_len equ $ - division_by_zero_msg
+
 section .bss
     input_buffer resb 64
     print_buffer resb 32
@@ -12,6 +16,7 @@ global print_int
 global print_string
 global read_int
 global exit
+global __minic_division_by_zero
 extern main
 
 _start:
@@ -129,3 +134,13 @@ read_int:
     mov rsp, rbp
     pop rbp
     ret
+
+; Runtime trap used by generated code before signed division.
+__minic_division_by_zero:
+    mov eax, 1
+    mov edi, 2
+    lea rsi, [division_by_zero_msg]
+    mov edx, division_by_zero_len
+    syscall
+    mov edi, 136
+    call exit

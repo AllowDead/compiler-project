@@ -1,0 +1,7 @@
+fn main() int {
+    int a = 0;
+    if (true || 10 / a > 1) {
+        return 5;
+    }
+    return 0;
+}

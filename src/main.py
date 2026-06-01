@@ -12,7 +12,7 @@ from codegen.x86_generator import X86Generator
 
 
 def print_symbol_table(symbol_table: SymbolTable, scope=None, indent=0):
-    """Рекурсивный вывод таблицы символов."""
+    """Recursive symbol table dump."""
     if scope is None:
         scope = symbol_table.current_scope
         while scope.parent:
@@ -38,16 +38,12 @@ def print_symbol_table(symbol_table: SymbolTable, scope=None, indent=0):
 def parse_source(source_code: str, verbose: bool = False):
     lexer = Lexer(source_code)
     tokens = lexer.scan_tokens()
-
     if verbose:
         print(f"Verbose: Scanned {len(tokens)} tokens.")
-
     parser = Parser(tokens)
     ast = parser.parse()
-
     if verbose:
         print("Verbose: AST generated successfully.")
-
     return tokens, ast
 
 
@@ -59,75 +55,28 @@ def analyze_ast(ast):
 
 def build_ir(ast):
     analyzer, decorated_ast, errors = analyze_ast(ast)
-
     if errors:
         return analyzer, decorated_ast, errors, None
-
     generator = IRGenerator(analyzer.symbol_table, None)
-    ir_program = generator.generate(decorated_ast)
-
-    return analyzer, decorated_ast, [], ir_program
+    return analyzer, decorated_ast, [], generator.generate(decorated_ast)
 
 
 def main():
     parser_args = argparse.ArgumentParser(description="MiniCompiler")
-
+    parser_args.add_argument("command", help="Command to run: lex, parse, check, symbols, ir, compile")
+    parser_args.add_argument("--input", required=True, help="Input source file")
+    parser_args.add_argument("--output", "--output-file", help="Output file (optional)")
     parser_args.add_argument(
-        "command",
-        help="Command to run: lex, parse, check, symbols, ir, compile",
-    )
-
-    parser_args.add_argument(
-        "--input",
-        required=True,
-        help="Input source file",
-    )
-
-    parser_args.add_argument(
-        "--output",
-        "--output-file",
-        help="Output file (optional)",
-    )
-
-    parser_args.add_argument(
-        "--format",
-        "--ast-format",
+        "--format", "--ast-format",
         choices=["text", "dot", "json"],
         default="text",
         help="Output format for AST/IR",
     )
-
-    parser_args.add_argument(
-        "--verbose",
-        action="store_true",
-        help="Enable verbose output",
-    )
-
-    parser_args.add_argument(
-        "--stats",
-        action="store_true",
-        help="Print IR/codegen statistics",
-    )
-
-    parser_args.add_argument(
-        "--optimize",
-        action="store_true",
-        help="Reserved for optimization stretch goals",
-    )
-
-    parser_args.add_argument(
-        "--target",
-        default="x86_64",
-        choices=["x86_64"],
-        help="Code generation target",
-    )
-
-    parser_args.add_argument(
-        "--syntax",
-        default="nasm",
-        choices=["nasm"],
-        help="Assembly syntax",
-    )
+    parser_args.add_argument("--verbose", action="store_true", help="Enable verbose output")
+    parser_args.add_argument("--stats", action="store_true", help="Print IR/codegen statistics")
+    parser_args.add_argument("--optimize", action="store_true", help="Reserved for optimization stretch goals")
+    parser_args.add_argument("--target", default="x86_64", choices=["x86_64"], help="Code generation target")
+    parser_args.add_argument("--syntax", default="nasm", choices=["nasm"], help="Assembly syntax")
 
     args = parser_args.parse_args()
     output_content = ""
@@ -138,7 +87,6 @@ def main():
 
         lexer = Lexer(source_code)
         tokens = lexer.scan_tokens()
-
         if args.verbose and args.command in ["parse", "check", "symbols", "ir", "compile"]:
             print(f"Verbose: Scanned {len(tokens)} tokens.")
 
@@ -146,7 +94,6 @@ def main():
         if args.command in ["parse", "check", "symbols", "ir", "compile"]:
             parser = Parser(tokens)
             ast = parser.parse()
-
             if args.verbose:
                 print("Verbose: AST generated successfully.")
 
@@ -156,120 +103,68 @@ def main():
         elif args.command == "parse":
             if args.format == "text":
                 output_content = ASTPrinter().print(ast)
-
             elif args.format == "dot":
                 printer = DotPrinter()
                 ast.accept(printer)
                 output_content = printer.get_output()
-
             elif args.format == "json":
                 output_content = ASTPrinter(output_type="json").print(ast)
 
         elif args.command == "check":
             analyzer, decorated_ast, errors = analyze_ast(ast)
             error_messages = [str(err) for err in errors]
-
             if args.format == "json":
                 output_content = json.dumps({"errors": error_messages}, indent=2)
-
             elif error_messages:
-                output_content = (
-                    "\n".join(error_messages)
-                    + f"\n\nSemantic analysis failed with {len(errors)} error(s)."
-                )
-
+                output_content = "\n".join(error_messages) + f"\n\nSemantic analysis failed with {len(errors)} error(s)."
             else:
                 output_content = "Semantic analysis passed! No errors found."
 
         elif args.command == "symbols":
             analyzer, decorated_ast, errors = analyze_ast(ast)
-
             if args.format == "json":
-                output_content = json.dumps(
-                    {"status": "Symbol table JSON dump is not implemented"},
-                    indent=2,
-                )
-
+                output_content = json.dumps({"status": "Symbol table JSON dump is not implemented"}, indent=2)
             else:
                 import io
-
                 old_stdout = sys.stdout
                 sys.stdout = io.StringIO()
-
                 print_symbol_table(analyzer.symbol_table)
-
                 output_content = sys.stdout.getvalue()
                 sys.stdout = old_stdout
 
         elif args.command == "ir":
             analyzer, decorated_ast, errors, ir_program = build_ir(ast)
-
             if errors:
-                output_content = (
-                    "\n".join(str(err) for err in errors)
-                    + f"\n\nIR generation skipped because semantic analysis failed with {len(errors)} error(s)."
-                )
-
+                output_content = "\n".join(str(err) for err in errors) + f"\n\nIR generation skipped because semantic analysis failed with {len(errors)} error(s)."
             else:
                 if args.format == "dot":
                     output_content = ir_program.to_dot()
-
                 elif args.format == "json":
                     output_content = ir_program.to_json()
-
                 else:
                     output_content = ir_program.to_text()
-
                 if args.stats:
                     output_content += "\n" + ir_program.statistics_text() + "\n"
-
                 if args.optimize:
-                    output_content += (
-                        "\n# Note: --optimize accepted; optimizer is not enabled in this patch.\n"
-                    )
-
+                    output_content += "\n# Note: --optimize accepted; optimizer is not enabled in this patch.\n"
 
         elif args.command == "compile":
-
             analyzer, decorated_ast, errors, ir_program = build_ir(ast)
-
             if errors:
-
-                output_content = (
-
-                        "\n".join(str(err) for err in errors)
-
-                        + f"\n\nCode generation skipped because semantic analysis failed with {len(errors)} error(s)."
-
-                )
-
+                output_content = "\n".join(str(err) for err in errors) + f"\n\nCode generation skipped because semantic analysis failed with {len(errors)} error(s)."
                 if args.output:
-
                     with open(args.output, "w", encoding="utf-8") as f:
-
                         f.write(output_content)
-
+                    print(f"Output written to {args.output}")
                 else:
-
                     print(output_content)
-
                 sys.exit(1)
 
-            generator = X86Generator(
-
-                target=args.target,
-
-                syntax=args.syntax,
-
-            )
-
+            generator = X86Generator(target=args.target, syntax=args.syntax)
             output_content = generator.generate(ir_program)
-
             if args.stats:
                 output_content += "\n; Codegen statistics:\n"
-
                 output_content += f"; instructions lowered: {generator.instruction_count}\n"
-
                 output_content += f"; register allocator spills: {generator.regalloc.spill_count}\n"
 
         else:
@@ -279,21 +174,16 @@ def main():
         if args.output:
             with open(args.output, "w", encoding="utf-8") as f:
                 f.write(output_content)
-
             print(f"Output written to {args.output}")
-
         else:
             print(output_content)
 
     except FileNotFoundError:
         print(f"Error: File '{args.input}' not found.")
         sys.exit(1)
-
     except Exception as e:
         print(f"Error: {e}")
-
         import traceback
-
         traceback.print_exc()
         sys.exit(1)
 

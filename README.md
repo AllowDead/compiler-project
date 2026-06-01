@@ -12,9 +12,12 @@
 │   ├── codegen
 │   │   ├── __init__.py
 │   │   ├── abi.py
+│   │   ├── array_generator.py
 │   │   ├── control_flow_generator.py
 │   │   ├── expression_generator.py
+│   │   ├── external_calls.py
 │   │   ├── label_manager.py
+│   │   ├── optimization_passes.py
 │   │   ├── register_allocator.py
 │   │   ├── stack_frame.py
 │   │   └── x86_generator.py
@@ -23,11 +26,14 @@
 │   │   ├── basic_block.py
 │   │   ├── control_flow.py
 │   │   ├── ir_generator.py
-│   │   └── ir_instructions.py
+│   │   ├── ir_instructions.py
+│   │   └── optimizer.py
 │   ├── lexer
 │   │   ├── __init__.py
 │   │   ├── lexer.py
 │   │   └── token.py
+│   ├── libc
+│   │   └── stdlib.h
 │   ├── main.py
 │   ├── parser
 │   │   ├── __init__.py
@@ -72,18 +78,26 @@
     │       ├── test_structural.py
     │       └── test_type_consistency.py
     ├── lexer
+    ├── optimization
+    │   ├── test_optimizer_smoke.py
+    │   └── test_performance_metrics.py
     ├── parser
     │   ├── invalid
     │   └── valid
     ├── semantic
     │   └── unit
     │       └── test_semantic_units.py
+    ├── sprint7
+    │   ├── test_array_support.py
+    │   └── test_external_malloc.py
     └── test_runner
         ├── run_codegen_tests.py
         ├── run_control_flow_tests.py
         ├── run_ir_tests.py
         ├── run_parser_tests.py
         ├── run_semantic_tests.py
+        ├── run_sprint7_benchmark.py
+        ├── run_sprint7_tests.py
         └── run_tests.py
 
 Запуск лексера
@@ -150,6 +164,17 @@ ld -o add_program runtime.o add.o
 echo $?
 ```
 
+Example:
+
+```bash
+python src/main.py ir --input demo/sprint7_demo.src --optimize --stats
+python src/main.py compile --input demo/sprint7_demo.src --output demo.asm --optimize --stats
+nasm -f elf64 -o sprint7_demo.o sprint7_demo.asm
+gcc -no-pie -o sprint7_demo sprint7_demo.o
+./sprint7_demo
+echo $?
+```
+
 Тестирование
 
 python tests/test_runner/run_lexer_tests.py
@@ -178,3 +203,5 @@ Run all control-flow tests:
 pytest tests/control_flow -v
 python tests/test_runner/run_control_flow_tests.py
 ```
+
+python tests/test_runner/run_sprint7_tests.py

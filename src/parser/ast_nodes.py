@@ -18,6 +18,7 @@ class Visitor(ABC):
     def visit_program(self, node: 'ProgramNode'): pass
     @abstractmethod
     def visit_function_decl(self, node: 'FunctionDeclNode'): pass
+    def visit_extern_function_decl(self, node: 'ExternFunctionDeclNode'): pass
     @abstractmethod
     def visit_struct_decl(self, node: 'StructDeclNode'): pass
     @abstractmethod
@@ -48,6 +49,7 @@ class Visitor(ABC):
     def visit_call_expr(self, node: 'CallExprNode'): pass
     @abstractmethod
     def visit_assignment_expr(self, node: 'AssignmentExprNode'): pass
+    def visit_array_access_expr(self, node: 'ArrayAccessExprNode'): pass
 
 # === Declaration Nodes ===
 
@@ -66,6 +68,19 @@ class FunctionDeclNode(ASTNode):
         self.body = body
     def accept(self, visitor: Visitor): return visitor.visit_function_decl(self)
 
+class ExternFunctionDeclNode(ASTNode):
+    def __init__(self, line: int, column: int, name: str, params, return_type: str, variadic: bool = False):
+        super().__init__(line, column)
+        self.name = name
+        self.params = params
+        self.return_type = return_type
+        self.variadic = variadic
+        self.body = None
+    def accept(self, visitor: Visitor):
+        if hasattr(visitor, 'visit_extern_function_decl'):
+            return visitor.visit_extern_function_decl(self)
+        return visitor.visit_function_decl(self)
+
 class StructDeclNode(ASTNode):
     def __init__(self, line: int, column: int, name: str, fields: List):
         super().__init__(line, column)
@@ -74,11 +89,12 @@ class StructDeclNode(ASTNode):
     def accept(self, visitor: Visitor): return visitor.visit_struct_decl(self)
 
 class VarDeclNode(ASTNode):
-    def __init__(self, line: int, column: int, var_type: str, name: str, initializer):
+    def __init__(self, line: int, column: int, var_type: str, name: str, initializer, array_dimensions=None):
         super().__init__(line, column)
         self.var_type = var_type
         self.name = name
         self.initializer = initializer
+        self.array_dimensions = array_dimensions or []
     def accept(self, visitor: Visitor): return visitor.visit_var_decl(self)
 
 # === Statement Nodes ===
@@ -161,6 +177,14 @@ class CallExprNode(ASTNode):
         self.arguments = arguments
     def accept(self, visitor: Visitor): return visitor.visit_call_expr(self)
 
+class ArrayAccessExprNode(ASTNode):
+    def __init__(self, line: int, column: int, array, index):
+        super().__init__(line, column)
+        self.array = array
+        self.index = index
+    def accept(self, visitor: Visitor):
+        return visitor.visit_array_access_expr(self)
+
 class AssignmentExprNode(ASTNode):
     def __init__(self, line: int, column: int, target, operator: str, value):
         super().__init__(line, column)
@@ -179,6 +203,6 @@ class ParamNode(ASTNode):
         return visitor.visit_param(self)
 
 # Type aliases for clarity
-DeclarationNode = FunctionDeclNode | StructDeclNode | VarDeclNode
+DeclarationNode = FunctionDeclNode | ExternFunctionDeclNode | StructDeclNode | VarDeclNode
 StatementNode = BlockNode | ExprStmtNode | IfStmtNode | WhileStmtNode | ForStmtNode | ReturnStmtNode | VarDeclNode
-ExpressionNode = BinaryExprNode | UnaryExprNode | LiteralExprNode | IdentifierExprNode | CallExprNode | AssignmentExprNode
+ExpressionNode = BinaryExprNode | UnaryExprNode | LiteralExprNode | IdentifierExprNode | CallExprNode | AssignmentExprNode | ArrayAccessExprNode

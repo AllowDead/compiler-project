@@ -8,6 +8,7 @@ from parser.printer import ASTPrinter, DotPrinter
 from semantic.analyzer import SemanticAnalyzer
 from semantic.symbol_table import SymbolKind, SymbolTable
 from ir.ir_generator import IRGenerator
+from ir.optimizer import IROptimizer
 from codegen.x86_generator import X86Generator
 
 
@@ -53,12 +54,17 @@ def analyze_ast(ast):
     return analyzer, decorated_ast, analyzer.get_errors()
 
 
-def build_ir(ast):
+def build_ir(ast, optimize: bool = False):
     analyzer, decorated_ast, errors = analyze_ast(ast)
     if errors:
-        return analyzer, decorated_ast, errors, None
+        return analyzer, decorated_ast, errors, None, None
     generator = IRGenerator(analyzer.symbol_table, None)
-    return analyzer, decorated_ast, [], generator.generate(decorated_ast)
+    ir_program = generator.generate(decorated_ast)
+    optimizer = None
+    if optimize:
+        optimizer = IROptimizer()
+        optimizer.optimize(ir_program)
+    return analyzer, decorated_ast, [], ir_program, optimizer
 
 
 def main():
@@ -133,7 +139,7 @@ def main():
                 sys.stdout = old_stdout
 
         elif args.command == "ir":
-            analyzer, decorated_ast, errors, ir_program = build_ir(ast)
+            analyzer, decorated_ast, errors, ir_program, optimizer = build_ir(ast, optimize=args.optimize)
             if errors:
                 output_content = "\n".join(str(err) for err in errors) + f"\n\nIR generation skipped because semantic analysis failed with {len(errors)} error(s)."
             else:
@@ -145,11 +151,11 @@ def main():
                     output_content = ir_program.to_text()
                 if args.stats:
                     output_content += "\n" + ir_program.statistics_text() + "\n"
-                if args.optimize:
-                    output_content += "\n# Note: --optimize accepted; optimizer is not enabled in this patch.\n"
+                    if optimizer:
+                        output_content += "\n" + optimizer.stats.to_text() + "\n"
 
         elif args.command == "compile":
-            analyzer, decorated_ast, errors, ir_program = build_ir(ast)
+            analyzer, decorated_ast, errors, ir_program, optimizer = build_ir(ast, optimize=args.optimize)
             if errors:
                 output_content = "\n".join(str(err) for err in errors) + f"\n\nCode generation skipped because semantic analysis failed with {len(errors)} error(s)."
                 if args.output:
@@ -166,6 +172,8 @@ def main():
                 output_content += "\n; Codegen statistics:\n"
                 output_content += f"; instructions lowered: {generator.instruction_count}\n"
                 output_content += f"; register allocator spills: {generator.regalloc.spill_count}\n"
+                if optimizer:
+                    output_content += "; " + optimizer.stats.to_text().replace("\n", "\n; ") + "\n"
 
         else:
             print(f"Error: Unknown command '{args.command}'")

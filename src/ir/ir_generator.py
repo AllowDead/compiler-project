@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional, Set
 
 from parser.ast_nodes import (
     AssignmentExprNode,
+    ArrayAccessExprNode,
     BinaryExprNode,
     BlockNode,
     CallExprNode,
@@ -303,9 +304,10 @@ class IRGenerator:
         return "unknown"
 
     def _type_size(self, type_name: str) -> int:
-        if type_name.startswith("struct"):
+        from codegen.abi import size_of
+        if str(type_name).startswith("struct"):
             return 8
-        return _TYPE_SIZES.get(type_name, 8)
+        return size_of(str(type_name))
 
     # --- Scope and variables ---
 
@@ -397,8 +399,23 @@ class IRGenerator:
         return None
 
     def visit_var_decl(self, node: VarDeclNode) -> None:
-        slot = self._declare_variable(node.name, node.var_type, node.line)
-        if node.initializer is not None:
+        type_name = node.var_type
+        if getattr(node, "array_dimensions", None):
+            type_name = node.var_type + "".join(f"[{d}]" for d in node.array_dimensions if d is not None)
+        slot = self._declare_variable(node.name, type_name, node.line)
+        if isinstance(node.initializer, list):
+            elem_size = self._type_size(node.var_type)
+            for index, init_expr in enumerate(node.initializer):
+                value = init_expr.accept(self)
+                self._emit(
+                    IROp.STORE,
+                    args=[IROperand.memory(f"{slot.ir_name}+{index * elem_size}", node.var_type), value],
+                    comment=f"{node.name}[{index}] = initializer",
+                    source_line=node.line,
+                )
+            if node.initializer:
+                self._mark_assigned(node.name)
+        elif node.initializer is not None:
             value = node.initializer.accept(self)
             self._emit(IROp.STORE, args=[slot.memory, value], comment=f"{node.name} = initializer", source_line=node.line)
             self._mark_assigned(node.name)
@@ -538,19 +555,49 @@ class IRGenerator:
         self._emit(IROp.LOAD, dest=temp, args=[slot.memory], comment=f"load {node.name}", type_name=slot.type_name, source_line=node.line)
         return temp
 
-    def _address_of(self, node: IdentifierExprNode | BinaryExprNode) -> IROperand:
+    def _address_of(self, node) -> IROperand:
         if isinstance(node, IdentifierExprNode):
             slot = self._lookup_variable(node.name)
             if slot is not None:
                 return slot.memory
             return IROperand.memory(node.name)
+        if isinstance(node, ArrayAccessExprNode):
+            return self._array_element_address(node)
         if isinstance(node, BinaryExprNode) and node.operator == ".":
-            base_addr = self._address_of(node.left) if isinstance(node.left, (IdentifierExprNode, BinaryExprNode)) else node.left.accept(self)
+            base_addr = self._address_of(node.left) if isinstance(node.left, (IdentifierExprNode, BinaryExprNode, ArrayAccessExprNode)) else node.left.accept(self)
             field = node.right.name if isinstance(node.right, IdentifierExprNode) else "field"
             addr = self._new_temp("ptr")
             self._emit(IROp.GEP, dest=addr, args=[base_addr, IROperand.literal(field)], comment=f"address of field {field}", source_line=node.line)
-            return IROperand.memory(str(addr))
+            return IROperand.memory(f"*{addr.value}")
         raise RuntimeError("Unsupported assignment target.")
+
+    def _array_element_address(self, node: ArrayAccessExprNode) -> IROperand:
+        # Arrays are lowered as base pointer + index * element_size.
+        base = node.array
+        index = node.index.accept(self)
+        elem_type = self._type_name(node) or "int"
+        elem_size = self._type_size(elem_type)
+        if isinstance(base, IdentifierExprNode):
+            slot = self._lookup_variable(base.name)
+            base_op = slot.memory if slot else IROperand.memory(base.name)
+        else:
+            base_op = base.accept(self)
+        addr = self._new_temp("ptr")
+        self._emit(
+            IROp.GEP,
+            dest=addr,
+            args=[base_op, index, IROperand.literal(elem_size, "int")],
+            comment="array element address",
+            type_name="ptr",
+            source_line=node.line,
+        )
+        return IROperand.memory(f"*{addr.value}", elem_type)
+
+    def visit_array_access_expr(self, node: ArrayAccessExprNode) -> IROperand:
+        addr = self._array_element_address(node)
+        temp = self._new_temp(self._type_name(node))
+        self._emit(IROp.LOAD, dest=temp, args=[addr], comment="array element load", type_name=temp.type_name, source_line=node.line)
+        return temp
 
     def visit_binary_expr(self, node: BinaryExprNode) -> IROperand:
         if node.operator == ".":
@@ -763,7 +810,7 @@ class IRGenerator:
         return dest or IROperand.literal(None, "void")
 
     def visit_assignment_expr(self, node: AssignmentExprNode) -> IROperand:
-        if not isinstance(node.target, (IdentifierExprNode, BinaryExprNode)):
+        if not isinstance(node.target, (IdentifierExprNode, BinaryExprNode, ArrayAccessExprNode)):
             raise RuntimeError("Invalid assignment target in IR generation.")
 
         if node.operator == "=":
@@ -782,7 +829,7 @@ class IRGenerator:
             self._emit(op_map[node.operator], dest=value, args=[current, rhs], comment=f"compound assignment {node.operator}", source_line=node.line)
 
         address = self._address_of(node.target)
-        target_name = node.target.name if isinstance(node.target, IdentifierExprNode) else "field"
+        target_name = node.target.name if isinstance(node.target, IdentifierExprNode) else "element"
         self._emit(IROp.STORE, args=[address, value], comment=f"assign {target_name}", source_line=node.line)
         if isinstance(node.target, IdentifierExprNode):
             self._mark_assigned(node.target.name)

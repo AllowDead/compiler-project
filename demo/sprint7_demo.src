@@ -1,0 +1,27 @@
+// Sprint 7 demo: recursion + arrays + external printf + malloc/free.
+fn fib(n int) int {
+    if (n <= 1) {
+        return n;
+    }
+    return fib(n - 1) + fib(n - 2);
+}
+
+fn sum_array(arr int[], size int) int {
+    int total = 0;
+    int i = 0;
+    while (i < size) {
+        total = total + arr[i];
+        i = i + 1;
+    }
+    return total;
+}
+
+fn main() int {
+    int values[5] = {1, 2, 3, 4, 5};
+    int total = sum_array(values, 5);
+    int f = fib(6);
+    printf("sum=%d fib=%d\n", total, f);
+    ptr memory = malloc(32);
+    free(memory);
+    return total + f;
+}

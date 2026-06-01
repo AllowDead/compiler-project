@@ -1,0 +1,15 @@
+extern int printf(char* format, ...);
+extern int scanf(char* format, ...);
+extern int puts(char* s);
+extern int getchar();
+extern void* malloc(int size);
+extern void free(void* ptr);
+extern void* memcpy(void* dest, void* src, int n);
+extern void* memset(void* dest, int value, int n);
+extern int strlen(char* s);
+extern char* strcpy(char* dest, char* src);
+extern int strcmp(char* a, char* b);
+extern float pow(float a, float b);
+extern float sqrt(float x);
+extern float sin(float x);
+extern float cos(float x);

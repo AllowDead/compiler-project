@@ -225,7 +225,8 @@ class Lexer:
             'bool': TokenType.KW_BOOL, 'return': TokenType.KW_RETURN,
             'true': TokenType.KW_TRUE, 'false': TokenType.KW_FALSE,
             'void': TokenType.KW_VOID, 'struct': TokenType.KW_STRUCT,
-            'fn': TokenType.KW_FN
+            'fn': TokenType.KW_FN,
+            'extern': TokenType.KW_EXTERN, 'char': TokenType.KW_CHAR
         }
 
         type = keywords.get(text, TokenType.IDENTIFIER)

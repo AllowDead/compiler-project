@@ -1,6 +1,7 @@
-"""System V AMD64 ABI helpers for Sprint 5 code generation."""
+"""System V AMD64 ABI helpers for Sprint 5-7 code generation."""
 from dataclasses import dataclass
 from typing import List
+import re
 
 
 INTEGER_ARG_REGS_64: List[str] = ["rdi", "rsi", "rdx", "rcx", "r8", "r9"]
@@ -15,14 +16,33 @@ def align_to(value: int, alignment: int = 16) -> int:
     return ((value + alignment - 1) // alignment) * alignment
 
 
-def size_of(type_name: str) -> int:
-    if type_name in ("bool", "byte"):
+def _base_size(type_name: str) -> int:
+    if type_name in ("bool", "byte", "char"):
         return 1
     if type_name in ("int", "float"):
         return 4
     if type_name in ("void", None):
         return 0
+    if type_name == "string" or str(type_name).endswith("*") or str(type_name).endswith("[]") or type_name == "ptr":
+        return 8
     return 8
+
+
+def size_of(type_name: str) -> int:
+    text = str(type_name or "void")
+    dims = [int(x) for x in re.findall(r"\[(\d+)\]", text)]
+    if dims:
+        base = re.sub(r"\[\d+\]", "", text)
+        size = _base_size(base)
+        for dim in dims:
+            size *= dim
+        return size
+    return _base_size(text)
+
+
+def is_pointer_like(type_name: str) -> bool:
+    text = str(type_name or "")
+    return text in ("string", "ptr") or text.endswith("*") or text.endswith("[]")
 
 
 def mem_prefix(type_name: str) -> str:
